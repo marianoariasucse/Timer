@@ -1,15 +1,31 @@
 <template>
-  <div>
-    <h2>Remaining time...</h2>
-    <p class="timer">{{ countdownRef.hours }}:{{ countdownRef.minutes }}:{{ countdownRef.seconds }}</p>
+  <div class="template">
+    <div class="card p-4" v-if="showSelectTime">
+      <h5 class="text-center">Select the time</h5>
+      <div class="time d-flex justify-content-between mb-3">
+        <input type="number" min="0" max="23" v-model="targetHour" class="no-spinners" maxlength="2"/>
+        <span>:</span>
+        <input type="number" min="0" max="59" v-model="targetMinute" class="no-spinners" maxlength="2"/>
+      </div>
+      <button class="btn btn-outline-primary" @click="handleInput">Start</button>
+    </div>
+    <div class="timer-div" v-else>
+      <h2>Remaining time...</h2>
+      <p class="timer">{{ countdownRef.hours }}:{{ countdownRef.minutes }}:{{ countdownRef.seconds }}</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
-const targetHour = 14;
-const targetMinute = 30;
+const defaultTargetTime = new Date();
+defaultTargetTime.setMinutes(defaultTargetTime.getMinutes() + 90);
+
+const targetHour = ref(localStorage.getItem('targetHour') || defaultTargetTime.getHours());
+const targetMinute = ref(localStorage.getItem('targetMinute') || defaultTargetTime.getMinutes());
+
+const showSelectTime = ref(localStorage.getItem('showSelectTime') === 'true' || true);
 
 const countdown = {
   hours: 0,
@@ -20,12 +36,10 @@ const countdown = {
 const countdownRef = ref(countdown);
 
 const startCountdown = () => {
-  const alarmSound = new Audio('@/assets/alarm.mp3');
-
   const checkAlarm = () => {
     const now = new Date();
     const targetTime = new Date();
-    targetTime.setHours(targetHour, targetMinute, 0, 0);
+    targetTime.setHours(targetHour.value, targetMinute.value, 0, 0);
 
     // Verificar si la hora objetivo ya ha pasado
     if (targetTime < now) {
@@ -43,8 +57,6 @@ const startCountdown = () => {
 
     // Check if the countdown reaches zero
     if (diff <= 0) {
-      // Play the alarm sound
-      alarmSound.play();
       clearInterval(interval);
     }
   };
@@ -59,6 +71,24 @@ const startCountdown = () => {
 onMounted(() => {
   startCountdown();
 });
+
+const handleInput = () => {
+  showSelectTime.value = !showSelectTime.value;
+  localStorage.setItem('showSelectTime', showSelectTime.value);
+};
+
+// Observa los cambios en targetHour, targetMinute y showSelectTime y almacena los valores en localStorage
+watch([targetHour, targetMinute, showSelectTime], () => {
+  localStorage.setItem('targetHour', targetHour.value);
+  localStorage.setItem('targetMinute', targetMinute.value);
+  localStorage.setItem('showSelectTime', showSelectTime.value);
+});
+
+// Verificar el valor inicial de showSelectTime al cargar la página
+if (showSelectTime.value === false) {
+  showSelectTime.value = true;
+}
+
 </script>
 
 <style scoped>
@@ -67,7 +97,7 @@ onMounted(() => {
   font-weight: 800;
 }
 
-div {
+.template {
   background-color: rgb(23, 23, 23);
   display: flex;
   justify-content: center;
@@ -80,4 +110,37 @@ div {
   color: white;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
+
+.card {
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  color: white;
+}
+
+input {
+  width: 160px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-weight: 800;
+  border-radius: 10px;
+}
+
+input:focus{
+  outline: 1px solid rgb(31, 128, 255);
+}
+
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* .no-spinners {
+  -moz-appearance: textfield;
+} */
 </style>

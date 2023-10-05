@@ -12,6 +12,7 @@
     <div class="timer-div" v-else>
       <h2>Remaining time...</h2>
       <p class="timer">{{ countdownRef.hours }}:{{ countdownRef.minutes }}:{{ countdownRef.seconds }}</p>
+      <h4 class="text-end">Target Time: {{ targetHour }}:{{ targetMinute }} hs</h4>
     </div>
   </div>
 </template>
@@ -53,7 +54,7 @@ const startCountdown = () => {
     countdownRef.value.hours = String(Math.floor(diff / 1000 / 60 / 60) % 24).padStart(2, '0');
 
     // Update document title with the timer text
-    document.title = `${countdownRef.value.hours}:${countdownRef.value.minutes}`;
+    document.title = `${countdownRef.value.hours}:${countdownRef.value.minutes}:${countdownRef.value.seconds} - Remaining time`;
 
     // Check if the countdown reaches zero
     if (diff <= 0) {
